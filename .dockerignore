@@ -1,0 +1,9 @@
+node_modules
+build
+.env
+.google-tokens.json
+tests
+*.md
+.git
+.vscode
+coverage

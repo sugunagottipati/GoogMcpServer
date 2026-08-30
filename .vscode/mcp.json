@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "google-workspace": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/deeptika/sandbox/NextLeap/mcp-server/build/index.js"]
+    }
+  }
+}
