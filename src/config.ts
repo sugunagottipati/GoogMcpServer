@@ -7,6 +7,7 @@ const configSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_REDIRECT_URI: z.url().optional(),
   GOOGLE_TOKEN_STORE_PATH: z.string().min(1).default(".google-tokens.json"),
+  GOOGLE_TOKENS_JSON: z.string().min(1).optional(),
   GOOGLE_TOKEN_STORE_ENCRYPTION_KEY: z.string().min(1).optional(),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   TRANSPORT: z.enum(["stdio", "http"]).default("stdio"),
