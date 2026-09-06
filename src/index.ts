@@ -21,6 +21,17 @@ async function runHttp(config: Config, buildServer: () => ReturnType<typeof crea
     response.status(200).send("ok");
   });
 
+  app.get("/", (_request, response) => {
+    response.status(200).json({
+      name: "google-workspace-mcp-server",
+      status: "ok",
+      endpoints: {
+        health: "/healthz",
+        mcp: "/mcp",
+      },
+    });
+  });
+
   // Stateless mode: a fresh server + transport per request avoids cross-request session leakage.
   app.post("/mcp", async (request, response) => {
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
