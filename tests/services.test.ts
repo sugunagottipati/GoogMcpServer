@@ -10,7 +10,10 @@ describe("workspace service", () => {
   it("extracts provider status from Google client errors", () => {
     expect(getGoogleProviderStatus({ response: { status: 403 } })).toBe(403);
     expect(getGoogleProviderStatus({ code: 429 })).toBe(429);
-    expect(getGoogleProviderStatus({ response: { status: "403" } })).toBeUndefined();
+    expect(getGoogleProviderStatus({ code: "401" })).toBe(401);
+    expect(getGoogleProviderStatus({ status: 404 })).toBe(404);
+    expect(getGoogleProviderStatus({ response: { data: { error: { code: 500 } } } })).toBe(500);
+    expect(getGoogleProviderStatus({ response: { status: "403" } })).toBe(403);
   });
 
   it("creates a draft without invoking the send path", async () => {

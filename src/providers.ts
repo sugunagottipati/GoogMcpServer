@@ -66,15 +66,21 @@ export class GoogleWorkspaceAdapter implements WorkspaceAdapter {
 
 export function getGoogleProviderStatus(error: unknown): number | undefined {
   if (typeof error !== "object" || error === null) return undefined;
-  if ("code" in error && typeof error.code === "number") return error.code;
-  if (
-    "response" in error &&
-    typeof error.response === "object" &&
-    error.response !== null &&
-    "status" in error.response &&
-    typeof error.response.status === "number"
-  ) {
-    return error.response.status;
+  const record = error as Record<string, unknown>;
+  const candidates: unknown[] = [record.code, record.status];
+  if (typeof record.response === "object" && record.response !== null) {
+    const response = record.response as Record<string, unknown>;
+    candidates.push(response.status);
+    if (typeof response.data === "object" && response.data !== null) {
+      const data = response.data as Record<string, unknown>;
+      if (typeof data.error === "object" && data.error !== null) {
+        candidates.push((data.error as Record<string, unknown>).code);
+      }
+    }
+  }
+  for (const candidate of candidates) {
+    const status = typeof candidate === "number" ? candidate : Number(candidate);
+    if (Number.isInteger(status) && status >= 100 && status <= 599) return status;
   }
   return undefined;
 }
