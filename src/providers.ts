@@ -87,6 +87,17 @@ export function getGoogleProviderStatus(error: unknown): number | undefined {
 
 function mapGoogleError(error: unknown): ApplicationError {
   const status = getGoogleProviderStatus(error);
+  const code =
+    typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
+      ? error.code.toLowerCase()
+      : "";
+  if (["invalid_grant", "unauthorized", "unauthenticated"].includes(code)) {
+    return new ApplicationError(
+      "AUTHENTICATION_REQUIRED",
+      "Google authorization is required or has expired.",
+      false,
+    );
+  }
   if (status === 401) return new ApplicationError("AUTHENTICATION_REQUIRED", "Google authorization is required or has expired.", false, status);
   if (status === 403) return new ApplicationError("AUTHORIZATION_DENIED", "The Google account is not authorized for this operation.", false, status);
   if (status === 404) return new ApplicationError("RESOURCE_NOT_FOUND", "The requested Google resource was not found or is inaccessible.", false, status);
