@@ -64,8 +64,23 @@ export class GoogleWorkspaceAdapter implements WorkspaceAdapter {
   }
 }
 
+export function getGoogleProviderStatus(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  if ("code" in error && typeof error.code === "number") return error.code;
+  if (
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "status" in error.response &&
+    typeof error.response.status === "number"
+  ) {
+    return error.response.status;
+  }
+  return undefined;
+}
+
 function mapGoogleError(error: unknown): ApplicationError {
-  const status = typeof error === "object" && error !== null && "code" in error && typeof error.code === "number" ? error.code : undefined;
+  const status = getGoogleProviderStatus(error);
   if (status === 401) return new ApplicationError("AUTHENTICATION_REQUIRED", "Google authorization is required or has expired.", false, status);
   if (status === 403) return new ApplicationError("AUTHORIZATION_DENIED", "The Google account is not authorized for this operation.", false, status);
   if (status === 404) return new ApplicationError("RESOURCE_NOT_FOUND", "The requested Google resource was not found or is inaccessible.", false, status);

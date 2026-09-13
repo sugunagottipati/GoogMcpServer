@@ -1,12 +1,18 @@
 import pino from "pino";
 import { describe, expect, it, vi } from "vitest";
-import type { WorkspaceAdapter } from "../src/providers.js";
+import { getGoogleProviderStatus, type WorkspaceAdapter } from "../src/providers.js";
 import { IdempotencyStore, WorkspaceService } from "../src/services.js";
 import { createSchemas } from "../src/validation.js";
 
 const schemas = createSchemas({ maxEmailSubjectSize: 998, maxEmailBodySize: 1_000, maxDocumentAppendSize: 1_000 });
 
 describe("workspace service", () => {
+  it("extracts provider status from Google client errors", () => {
+    expect(getGoogleProviderStatus({ response: { status: 403 } })).toBe(403);
+    expect(getGoogleProviderStatus({ code: 429 })).toBe(429);
+    expect(getGoogleProviderStatus({ response: { status: "403" } })).toBeUndefined();
+  });
+
   it("creates a draft without invoking the send path", async () => {
     const adapter: WorkspaceAdapter = { createDraft: vi.fn().mockResolvedValue({ draftId: "draft", messageId: "message", threadId: "thread" }), sendEmail: vi.fn(), appendDocument: vi.fn() };
     const service = new WorkspaceService(async () => adapter, new IdempotencyStore(), pino({ enabled: false }));
