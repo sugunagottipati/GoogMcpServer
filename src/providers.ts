@@ -91,12 +91,22 @@ function mapGoogleError(error: unknown): ApplicationError {
     typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
       ? error.code.toLowerCase()
       : "";
-  if (["invalid_grant", "unauthorized", "unauthenticated"].includes(code)) {
+  const reason = getGoogleProviderReason(error);
+  if (["invalid_grant", "unauthorized", "unauthenticated"].includes(code) || reason === "unauthenticated") {
     return new ApplicationError(
       "AUTHENTICATION_REQUIRED",
       "Google authorization is required or has expired.",
       false,
     );
+  }
+  if (reason === "permission_denied") {
+    return new ApplicationError("AUTHORIZATION_DENIED", "The Google account is not authorized for this operation.", false);
+  }
+  if (reason === "not_found") {
+    return new ApplicationError("RESOURCE_NOT_FOUND", "The requested Google resource was not found or is inaccessible.", false);
+  }
+  if (reason === "resource_exhausted") {
+    return new ApplicationError("RATE_LIMITED", "Google rate limited this operation.", true);
   }
   if (status === 401) return new ApplicationError("AUTHENTICATION_REQUIRED", "Google authorization is required or has expired.", false, status);
   if (status === 403) return new ApplicationError("AUTHORIZATION_DENIED", "The Google account is not authorized for this operation.", false, status);
@@ -104,4 +114,15 @@ function mapGoogleError(error: unknown): ApplicationError {
   if (status === 429) return new ApplicationError("RATE_LIMITED", "Google rate limited this operation.", true, status);
   if (status && status >= 500) return new ApplicationError("PROVIDER_ERROR", "Google Workspace is temporarily unavailable.", true, status);
   return new ApplicationError("PROVIDER_ERROR", "Google Workspace could not complete the operation.", false, status);
+}
+
+function getGoogleProviderReason(error: unknown): string {
+  if (typeof error !== "object" || error === null || !("response" in error)) return "";
+  const response = error.response;
+  if (typeof response !== "object" || response === null || !("data" in response)) return "";
+  const data = response.data;
+  if (typeof data !== "object" || data === null || !("error" in data)) return "";
+  const providerError = data.error;
+  if (typeof providerError !== "object" || providerError === null || !("status" in providerError)) return "";
+  return typeof providerError.status === "string" ? providerError.status.toLowerCase() : "";
 }
